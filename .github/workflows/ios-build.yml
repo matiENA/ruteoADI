@@ -1,0 +1,41 @@
+name: Compilar iOS (Compose Multiplatform)
+
+# 1. ¿Cuándo se ejecuta? Cada vez que subas código a la rama principal (main)
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Te permite ejecutarlo manualmente desde la web de GitHub
+
+jobs:
+  build-ios:
+    # 2. LA MAGIA: Le pedimos a GitHub que nos preste la última versión de macOS
+    runs-on: macos-latest
+
+    steps:
+      # Paso A: El robot descarga tu código
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      # Paso B: Preparamos Java (Kotlin necesita Java para compilar, igual que en tu PC)
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Paso C: Dar permisos al ejecutable de Gradle
+      - name: Dar permisos de ejecución a Gradle
+        run: chmod +x ./gradlew
+
+      # Paso D: COMPILACIÓN PARA iOS
+      # (Este comando le dice a Kotlin que use el compilador de Apple integrado en la Mac)
+      - name: Compilar binario de iOS (Framework)
+        run: ./gradlew :composeApp:linkReleaseFrameworkIosArm64
+
+      # Paso E: Guardar el resultado para que puedas descargarlo
+      - name: Subir el Framework compilado
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-Framework
+          path: composeApp/build/bin/iosArm64/releaseFramework/
