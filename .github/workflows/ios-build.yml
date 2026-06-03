@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+# 👇 ESTO SOLUCIONA EL WARNING: Forzamos a GitHub a usar Node.js 24
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-ios:
     runs-on: macos-latest
@@ -23,11 +27,9 @@ jobs:
       - name: Dar permisos de ejecución a Gradle
         run: chmod +x ./gradlew
 
-      # 👇 ACTUALIZADO: Cambiamos :composeApp por :shared
       - name: Compilar binario de iOS (Framework)
         run: ./gradlew :shared:linkReleaseFrameworkIosArm64
 
-      # 👇 ACTUALIZADO: Cambiamos la ruta de composeApp a shared
       - name: Subir el Framework compilado
         uses: actions/upload-artifact@v4
         with:
