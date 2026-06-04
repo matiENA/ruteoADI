@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+     id("com.google.firebase.crashlytics")
+
 }
 
 kotlin {
@@ -18,6 +20,13 @@ dependencies {
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
+// Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+
+    // Add the dependencies for the Crashlytics and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
 }
 
 android {
@@ -25,11 +34,11 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.eor.ruteo"
+        applicationId = "com.eor.ruteo.kmp" // 👈 El sufijo ".kmp" es la clave
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0-KMP"
     }
     packaging {
         resources {
