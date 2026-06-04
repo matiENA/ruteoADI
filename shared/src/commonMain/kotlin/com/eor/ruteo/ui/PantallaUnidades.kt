@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.eor.ruteo.FiltroTerminal
 import com.eor.ruteo.ViajeIntegrado
 import com.eor.ruteo.ui.components.Feedback
+import com.eor.ruteo.parsearColorHexKMP
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -127,7 +128,7 @@ fun UnidadCard(
         viajesDeEstaUt.find { !it.estadoUt.equals("VACIO", ignoreCase = true) } ?: viajesDeEstaUt.firstOrNull()
     }
 
-    val colorFondoBase = remember(tdActivo) {
+    val colorFondoBase: Color = remember(tdActivo) {
         parsearColorHexKMP(tdActivo?.colorHexA)
     }
 
@@ -212,20 +213,5 @@ fun UnidadCard(
                 }
             }
         }
-    }
-}
-
-// 5. Parseo de Color compatible con KMP (iOS y Android)
-fun parsearColorHexKMP(hex: String?): Color {
-    if (hex.isNullOrBlank()) return Color.Transparent
-    val cleanHex = hex.removePrefix("#")
-    return try {
-        when (cleanHex.length) {
-            6 -> Color(cleanHex.toLong(16) or 0xFF000000) // Añade Alpha 100% si no lo trae
-            8 -> Color(cleanHex.toLong(16))
-            else -> Color.Transparent
-        }
-    } catch (e: Exception) {
-        Color.Transparent
     }
 }
