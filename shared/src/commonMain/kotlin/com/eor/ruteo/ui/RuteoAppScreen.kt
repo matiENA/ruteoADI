@@ -55,14 +55,11 @@ fun RuteoAppScreen(
             if (currentScreen == AppScreen.Unidades) {
                 // Conexión directa con la PantallaUnidades y los nuevos chips de filtrado
                 PantallaUnidades(
-                    state = state,
+                    viajesActivos = (state as? UiState.Success)?.viajesActivos ?: emptyList(),
                     searchQuery = searchQuery,
-                    viajesGuardados = viajesGuardados,
-                    filtroActual = filtroActual, // 👈 Inyectamos el filtro seleccionado
-                    onSearchQueryChange = { nuevoTexto -> viewModel.updateSearchQuery(nuevoTexto) },
-                    onFiltroChange = { nuevoFiltro -> viewModel.updateFiltro(nuevoFiltro) }, // 👈 Evento de cambio de chip
-                    onGuardarClick = { idUnico -> viewModel.toggleGuardarViaje(idUnico) },
-                    onRetry = { viewModel.fetchViajes(forzar = true) }
+                    filtroActual = filtroActual,
+                    onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                    onFiltroChange = { viewModel.updateFiltro(it) }
                 )
             } else {
                 // Pantalla de viajes (Acoplada al estado Success cuando esté lista)

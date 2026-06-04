@@ -5,19 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.eor.ruteo.ViajeIntegrado
 
 @Composable
@@ -26,14 +21,6 @@ fun ViajeHistorialCard(
     isGuardado: Boolean,
     onToggleGuardar: () -> Unit
 ) {
-    // Sanitización defensiva de tipos de plataforma de la JVM [txt]
-    val nViaje = remember(viaje.nViaje) { (viaje.nViaje as? String?).orEmpty() }
-    val numeroUt = remember(viaje.numeroUt) { (viaje.numeroUt as? String?).orEmpty() }
-    val chofer = remember(viaje.chofer) { (viaje.chofer as? String?).orEmpty() }
-    val tractor = remember(viaje.tractor) { (viaje.tractor as? String?).orEmpty() }
-    val semi = remember(viaje.semi) { (viaje.semi as? String?).orEmpty() }
-    val horarioVacio = remember(viaje.horarioVacio) { (viaje.horarioVacio as? String?).orEmpty() }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -49,46 +36,36 @@ fun ViajeHistorialCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Columna Izquierda con peso (Datos de Control) [txt]
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Viaje: ${nViaje.ifEmpty { "S/D" }}",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
+            // Columna Izquierda (Datos de Control)
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = chofer.ifEmpty { "Chofer S/D" },
+                    text = "Viaje: ${viaje.nViaje.ifEmpty { "S/D" }}",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = viaje.chofer.ifEmpty { "Chofer S/D" },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-
                 Spacer(modifier = Modifier.height(2.dp))
-
                 Text(
-                    text = "Placas: ${tractor.ifEmpty { "S/D" }} | ${semi.ifEmpty { "S/D" }}",
+                    text = "Placas: ${viaje.tractor.ifEmpty { "S/D" }} | ${viaje.semi.ifEmpty { "S/D" }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Badge de Entregado
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        text = "Entregado: $horarioVacio",
+                        text = "Entregado: ${viaje.horarioVacio.ifEmpty { "Pendiente" }}",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -97,30 +74,23 @@ fun ViajeHistorialCard(
                 }
             }
 
-            // Columna Derecha ("Stub" de Unidad + Estrella de guardado) [txt]
+            // Columna Derecha (Stub de Unidad + Estrella)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 16.dp)
             ) {
                 Text(
-                    text = numeroUt.ifEmpty { "S/D" },
+                    text = viaje.numeroUt.ifEmpty { "S/D" },
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(
-                    onClick = onToggleGuardar,
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
+                IconButton(onClick = onToggleGuardar) {
                     Icon(
-                        imageVector = if (isGuardado) Icons.Default.Star else StarBorderIconHistorial,
+                        imageVector = if (isGuardado) Icons.Default.Star else Icons.Outlined.StarBorder,
                         contentDescription = "Guardar viaje",
-                        tint = if (isGuardado) {
-                            Color(0xFFFFD700)
-                        } else {
-                            Color(0xFFD3D3D3)
-                        },
+                        tint = if (isGuardado) Color(0xFFFFD700) else Color.LightGray,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -128,50 +98,3 @@ fun ViajeHistorialCard(
         }
     }
 }
-
-// 👇 VECTOR DE SOPORTE HISTORIAL (Privado de archivo sin colisiones) [txt]
-private val StarBorderIconHistorial: ImageVector
-    get() {
-        val existing = _starBorderIconHistorial
-        if (existing != null) return existing
-        val newVector = ImageVector.Builder(
-            name = "StarBorderHistorial",
-            defaultWidth = 24.dp,
-            defaultHeight = 24.dp,
-            viewportWidth = 24f,
-            viewportHeight = 24f
-        ).path(
-            fill = SolidColor(Color.Black),
-            pathFillType = PathFillType.EvenOdd
-        ) {
-            moveTo(22f, 9.24f)
-            lineTo(14.81f, 8.62f)
-            lineTo(12f, 2f)
-            lineTo(9.19f, 8.63f)
-            lineTo(2f, 9.24f)
-            lineTo(7.46f, 13.97f)
-            lineTo(5.82f, 21f)
-            lineTo(12f, 17.27f)
-            lineTo(18.18f, 21f)
-            lineTo(16.55f, 13.97f)
-            lineTo(22f, 9.24f)
-            close()
-
-            moveTo(12f, 15.4f)
-            lineTo(8.24f, 17.67f)
-            lineTo(9.24f, 13.39f)
-            lineTo(5.92f, 10.51f)
-            lineTo(10.3f, 10.13f)
-            lineTo(12f, 6.1f)
-            lineTo(13.71f, 10.14f)
-            lineTo(18.09f, 10.52f)
-            lineTo(14.77f, 13.4f)
-            lineTo(15.77f, 17.68f)
-            lineTo(12f, 15.4f)
-            close()
-        }.build()
-        _starBorderIconHistorial = newVector
-        return newVector
-    }
-
-private var _starBorderIconHistorial: ImageVector? = null
