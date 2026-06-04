@@ -33,16 +33,6 @@ fun App() {
                     viewModel = viewModel
                 )
 
-                // 2. EL BOTÓN DE PRUEBA CRASHLYTICS (Flotando en el centro de la pantalla)
-                Button(
-                    onClick = {
-                        // Esto generará un error fatal a propósito
-                        throw RuntimeException("¡Prueba de Crashlytics desde KMP Android!")
-                    },
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    Text("Probar Crashlytics")
-                }
             }
         }
     }

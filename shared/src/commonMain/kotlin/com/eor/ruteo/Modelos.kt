@@ -51,7 +51,8 @@ data class ParadaViaje(
     val producto: String = "",
     val cantidad: String = "",
     val cisternado: String = "",
-    val direccion: String = ""
+    val direccion: String = "",
+    val hexCliente: String = ""
 )
 
 // Este se mantiene igual para tu UI

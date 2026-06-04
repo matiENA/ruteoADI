@@ -1,6 +1,7 @@
 package com.eor.ruteo.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.eor.ruteo.ViajeIntegrado
 import com.eor.ruteo.parsearColorHexKMP
+import kotlin.math.abs
 
 @Composable
 fun ViajeViajesCard(
@@ -36,8 +38,10 @@ fun ViajeViajesCard(
     val rawColorA = parsearColorHexKMP(viaje.colorHexA)
     val rawColorHX = parsearColorHexKMP(viaje.colorHexHx)
     val baseColor = MaterialTheme.colorScheme.surface
-    val colorA = if (rawColorA != Color.Transparent) rawColorA.copy(alpha = 0.15f) else baseColor
-    val colorHX = if (rawColorHX != Color.Transparent) rawColorHX.copy(alpha = 0.15f) else baseColor
+
+    // 🔥 Aumento de intensidad: Alpha sube a 0.5f para que los colores de la tarjeta destaquen más
+    val colorA = if (rawColorA != Color.Transparent) rawColorA.copy(alpha = 0.5f) else baseColor
+    val colorHX = if (rawColorHX != Color.Transparent) rawColorHX.copy(alpha = 0.5f) else baseColor
 
     Card(
         modifier = Modifier
@@ -59,42 +63,62 @@ fun ViajeViajesCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = viaje.chofer.ifEmpty { "CHOFER S/D" }.uppercase(),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Placas: ${viaje.tractor} | ${viaje.semi}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
-                        // TD en grande, SIN la fecha (ya está en el Header de la sección)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "Llegada a Planta: ${viaje.llegadaPlanta.ifEmpty { "-" }}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
                             text = "TD: ${viaje.numDespacho.ifEmpty { "S/D" }}",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Viaje: ${viaje.nViaje} | UT: ${viaje.numeroUt}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Tractor: ${viaje.tractor} | Semi: ${viaje.semi}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Chofer: ${viaje.chofer}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(start = 8.dp)) {
-                        IconButton(onClick = onToggleGuardar) {
-                            Icon(
-                                imageVector = if (isGuardado) Icons.Default.Star else StarBorderIconHistorial,
-                                contentDescription = "Guardar",
-                                tint = if (isGuardado) Color(0xFFFFD700) else MaterialTheme.colorScheme.outline
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = viaje.numeroUt.ifEmpty { "-" },
+                                style = MaterialTheme.typography.displayLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.primary
                             )
+                            Spacer(Modifier.width(8.dp))
+                            IconButton(onClick = onToggleGuardar) {
+                                Icon(
+                                    imageVector = if (isGuardado) Icons.Default.Star else StarBorderIconHistorial,
+                                    contentDescription = "Guardar",
+                                    tint = if (isGuardado) Color(0xFFFFD700) else MaterialTheme.colorScheme.outline
+                                )
+                            }
                         }
                         Icon(
                             imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -104,38 +128,85 @@ fun ViajeViajesCard(
                     }
                 }
 
-                // --- DROPDOWN ---
+                // --- DROPDOWN CLIENTES ---
                 AnimatedVisibility(visible = expanded) {
                     Column {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
                         Column(modifier = Modifier.padding(16.dp)) {
 
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Llegada Planta: ${viaje.llegadaPlanta.ifEmpty { "-" }}", style = MaterialTheme.typography.bodySmall)
-                                if (viaje.horarioVacio.isNotBlank()) {
-                                    Surface(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(4.dp)) {
-                                        Text("Vació: ${viaje.horarioVacio}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.padding(4.dp))
+                            viaje.paradas.forEachIndexed { index, parada ->
+                                if (index > 0) {
+                                    Spacer(Modifier.height(12.dp))
+                                }
+
+                                // Generamos el color determinista basado en el nombre del cliente
+                                val colorClienteBase = generarColorCliente(parada.destino)
+                                val colorFondoCliente = colorClienteBase.copy(alpha = 0.25f)
+                                val colorBordeCliente = colorClienteBase.copy(alpha = 0.8f)
+
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = colorFondoCliente,
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, colorClienteBase.copy(alpha = 0.4f))
+                                ) {
+                                    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .width(8.dp)
+                                                .background(colorBordeCliente)
+                                        )
+
+                                        Column(modifier = Modifier.padding(12.dp).fillMaxWidth()) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.Top
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                                    Text(
+                                                        text = parada.destino.ifEmpty { "Cliente S/D" },
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        color = MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                }
+
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                                    shape = RoundedCornerShape(6.dp)
+                                                ) {
+                                                    Text(
+                                                        text = parada.cantidad.ifEmpty { "0 M3" },
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        fontWeight = FontWeight.Black,
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(Modifier.height(6.dp))
+                                            Text("Producto: ${parada.producto}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Cisternado Sugerido: ${parada.cisternado}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                                            Text("Dir: ${parada.direccion}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        }
                                     }
                                 }
                             }
-                            Spacer(Modifier.height(12.dp))
 
-                            viaje.paradas.forEachIndexed { index, parada ->
-                                if (index > 0) Spacer(Modifier.height(8.dp))
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text(parada.producto.ifEmpty { "Producto S/D" }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                    Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(6.dp)) {
-                                        Text(
-                                            text = parada.cantidad.ifEmpty { "0 M3" },
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Black,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
-                                    }
+                            if (viaje.horarioVacio.isNotBlank()) {
+                                Spacer(Modifier.height(12.dp))
+                                Surface(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(4.dp)) {
+                                    Text(
+                                        text = "Vació: ${viaje.horarioVacio}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
                                 }
-                                Text("Cisternado: ${parada.cisternado}", style = MaterialTheme.typography.bodySmall)
-                                Text("Dir: ${parada.direccion}", style = MaterialTheme.typography.bodySmall, color = Color.Gray, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
@@ -145,7 +216,28 @@ fun ViajeViajesCard(
     }
 }
 
-// Vector de soporte
+// 👇 Generador Determinista de Colores Pastel
+private fun generarColorCliente(nombre: String): Color {
+    if (nombre.isBlank()) return Color(0xFFE0E0E0) // Gris por defecto si está vacío
+
+    val paletaPastel = listOf(
+        Color(0xFF90CAF9), // Light Blue 200
+        Color(0xFFA5D6A7), // Green 200
+        Color(0xFFEF9A9A), // Red 200
+        Color(0xFFFFF59D), // Yellow 200
+        Color(0xFFCE93D8), // Purple 200
+        Color(0xFFB39DDB), // Deep Purple 200
+        Color(0xFF80DEEA), // Cyan 200
+        Color(0xFFFFCC80), // Teal 200
+        Color(0xFFFFAB91), // Orange 200
+        Color(0xFFF48FB1)  // Deep Orange 200
+    )
+
+    val index = abs(nombre.hashCode()) % paletaPastel.size
+    return paletaPastel[index]
+}
+
+// Vector de soporte para la Estrella Original
 private val StarBorderIconHistorial: ImageVector
     get() {
         val existing = _starBorderIconHistorial
