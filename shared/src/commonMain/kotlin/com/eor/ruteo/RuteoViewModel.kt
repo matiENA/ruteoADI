@@ -28,9 +28,13 @@ class RuteoViewModel : ViewModel() {
     private val _viajesGuardados = MutableStateFlow<Set<String>>(emptySet())
     val viajesGuardados: StateFlow<Set<String>> = _viajesGuardados.asStateFlow()
 
-    // 2. Agregamos el estado del Filtro actual
+    // 2. Agregamos el estado del Filtro actual para las Unidades
     private val _filtroActual = MutableStateFlow(FiltroTerminal.TODOS)
     val filtroActual: StateFlow<FiltroTerminal> = _filtroActual.asStateFlow()
+
+    // 👇 NUEVO: Estado para alternar entre viajes Activos y Completados en la sección Viajes
+    private val _mostrarCompletados = MutableStateFlow(false)
+    val mostrarCompletados: StateFlow<Boolean> = _mostrarCompletados.asStateFlow()
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -65,9 +69,14 @@ class RuteoViewModel : ViewModel() {
         _searchQuery.value = query
     }
 
-    // 3. Función para cambiar el filtro
+    // 3. Función para cambiar el filtro de terminales
     fun updateFiltro(filtro: FiltroTerminal) {
         _filtroActual.value = filtro
+    }
+
+    // 👇 NUEVO: Función para alternar la vista de viajes (TopAppBar)
+    fun toggleMostrarCompletados() {
+        _mostrarCompletados.value = !_mostrarCompletados.value
     }
 
     fun toggleGuardarViaje(idUnico: String) {

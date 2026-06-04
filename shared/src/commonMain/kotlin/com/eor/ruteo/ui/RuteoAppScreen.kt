@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import com.eor.ruteo.RuteoViewModel
 import com.eor.ruteo.UiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RuteoAppScreen(
     state: UiState,
@@ -20,14 +22,28 @@ fun RuteoAppScreen(
 ) {
     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Unidades) }
 
-    // Recolectamos todos los flujos de estado del "Cerebro" (ViewModel)
+    // Estado para controlar la vista de Viajes
+    val mostrarCompletados by viewModel.mostrarCompletados.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val viajesGuardados by viewModel.viajesGuardados.collectAsState()
-
-    // 👇 NUEVO: Recolectamos el estado del filtro de terminales
     val filtroActual by viewModel.filtroActual.collectAsState()
 
     Scaffold(
+        topBar = {
+            if (currentScreen == AppScreen.Viajes) {
+                TopAppBar(
+                    title = { Text(if (mostrarCompletados) "Viajes Completados" else "Viajes en Curso") },
+                    actions = {
+                        IconButton(onClick = { viewModel.toggleMostrarCompletados() }) {
+                            Icon(
+                                imageVector = if (mostrarCompletados) Icons.AutoMirrored.Filled.List else Icons.Default.CheckCircle,
+                                contentDescription = "Cambiar vista"
+                            )
+                        }
+                    }
+                )
+            }
+        },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
@@ -39,35 +55,32 @@ fun RuteoAppScreen(
                 NavigationBarItem(
                     selected = currentScreen == AppScreen.Unidades,
                     onClick = { currentScreen = AppScreen.Unidades },
-                    icon = { Icon(Icons.Default.Place, contentDescription = "Unidades") },
+                    icon = { Icon(Icons.Default.LocalShipping, contentDescription = "Unidades") },
                     label = { Text("Unidades") }
                 )
             }
         }
     ) { innerPadding ->
-        // Contenedor principal respetando el espacio del BottomBar
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Evaluamos la pantalla actual (Manejo de navegación estructural)
-            if (currentScreen == AppScreen.Unidades) {
-                // Conexión directa con la PantallaUnidades y los nuevos chips de filtrado
-                PantallaUnidades(
-                    viajesActivos = (state as? UiState.Success)?.viajesActivos ?: emptyList(),
-                    searchQuery = searchQuery,
-                    filtroActual = filtroActual,
-                    onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                    onFiltroChange = { viewModel.updateFiltro(it) }
-                )
-            } else {
-                // Pantalla de viajes (Acoplada al estado Success cuando esté lista)
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    when (state) {
-                        is UiState.Loading -> CircularProgressIndicator()
-                        is UiState.Error -> Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                        is UiState.Success -> Text("Historial de Viajes (${state.viajesFinalizados.size} completados)", style = MaterialTheme.typography.titleMedium)
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            when (state) {
+                is UiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+                is UiState.Error -> Text("Error: ${state.message}", Modifier.align(Alignment.Center))
+                is UiState.Success -> {
+                    if (currentScreen == AppScreen.Unidades) {
+                        PantallaUnidades(
+                            viajesActivos = state.viajesActivos,
+                            searchQuery = searchQuery,
+                            filtroActual = filtroActual,
+                            onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                            onFiltroChange = { viewModel.updateFiltro(it) }
+                        )
+                    } else {
+                        // Renderizamos la pantalla de viajes con dropdowns
+                        PantallaViajes(
+                            viajes = if (mostrarCompletados) state.viajesFinalizados else state.viajesActivos,
+                            viajesGuardados = viajesGuardados,
+                            onGuardarClick = { viewModel.toggleGuardarViaje(it) }
+                        )
                     }
                 }
             }
