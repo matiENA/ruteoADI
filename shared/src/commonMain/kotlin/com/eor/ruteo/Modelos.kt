@@ -1,5 +1,51 @@
 package com.eor.ruteo
 
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SheetResponse(
+    val success: Boolean,
+    val headers: List<String> = emptyList(),
+    val data: List<List<String>> = emptyList()
+)
+
+@Serializable
+data class ViajesAgregadosResponse(
+    val success: Boolean,
+    val diasDisponibles: List<DiaReciente> = emptyList(),
+    val data: List<ViajeIntegrado> = emptyList()
+)
+
+@Serializable
+data class DiaReciente(
+    val fecha: String,
+    val sheetId: String
+)
+
+@Serializable
+data class ViajeIntegrado(
+    val idUnico: String = "",
+    val tractor: String = "",
+    val numDespacho: String = "",
+    val terminalOrigen: String = "",
+    val fechaPlanificada: String = "",
+    val cisternadoReal: String = "",
+    val colorHex: String? = null,
+    val isCompletado: Boolean = false,
+    val paradas: List<ParadaViaje> = emptyList(),
+    val numeroUt: String = "",
+    val semi: String = "",
+    val chofer: String = "",
+    val ultimoTracking: String = "",
+    val colorHexA: String? = null,
+    val colorHexHx: String? = null,
+    val nViaje: String = "",
+    val llegadaPlanta: String = "",
+    val horarioVacio: String = "",
+    val estadoUt: String = ""
+)
+
+@Serializable
 data class ParadaViaje(
     val destino: String = "",
     val producto: String = "",
@@ -8,29 +54,7 @@ data class ParadaViaje(
     val direccion: String = ""
 )
 
-data class ViajeIntegrado(
-    val idUnico: String = "",
-    val numeroUt: String = "",
-    val tractor: String = "",
-    val semi: String = "",
-    val chofer: String = "",
-    val numDespacho: String = "",
-    val estadoUt: String = "",
-    val horarioVacio: String = "",
-    val isCompletado: Boolean = false,
-    val terminalOrigen: String = "",
-    val fechaPlanificada: String = "",
-    val cisternadoReal: String = "",
-    val ultimoTracking: String = "",
-    val nViaje: String = "",
-    val llegadaPlanta: String = "",
-    val colorHexA: String? = null,
-    val colorHexHx: String? = null,
-    val paradas: List<ParadaViaje> = emptyList()
-)
-
-data class DiaReciente(val fecha: String, val sheetId: String)
-
+// Este se mantiene igual para tu UI
 sealed class UiState {
     object Loading : UiState()
     data class Success(
