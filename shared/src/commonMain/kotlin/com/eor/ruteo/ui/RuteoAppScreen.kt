@@ -1,7 +1,6 @@
 package com.eor.ruteo.ui
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -16,10 +15,17 @@ import com.eor.ruteo.UiState
 
 @Composable
 fun RuteoAppScreen(
-    state: UiState, 
+    state: UiState,
     viewModel: RuteoViewModel
 ) {
-    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Viajes) }
+    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Unidades) }
+
+    // Recolectamos todos los flujos de estado del "Cerebro" (ViewModel)
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val viajesGuardados by viewModel.viajesGuardados.collectAsState()
+
+    // 👇 NUEVO: Recolectamos el estado del filtro de terminales
+    val filtroActual by viewModel.filtroActual.collectAsState()
 
     Scaffold(
         bottomBar = {
@@ -39,36 +45,32 @@ fun RuteoAppScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        // Contenedor principal respetando el espacio del BottomBar
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (state) {
-                is UiState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is UiState.Error -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-                is UiState.Success -> {
-                    // Renderizamos la pantalla según la pestaña seleccionada
-                    if (currentScreen == AppScreen.Unidades) {
-                        PantallaUnidades(
-                            viajes = state.viajesActivos,
-                            onTdClick = { desp ->
-                                viewModel.updateSearchQuery(desp)
-                                currentScreen = AppScreen.Viajes
-                            }
-                        )
-                    } else {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("Pantalla de Viajes (En construcción)")
-                        }
+            // Evaluamos la pantalla actual (Manejo de navegación estructural)
+            if (currentScreen == AppScreen.Unidades) {
+                // Conexión directa con la PantallaUnidades y los nuevos chips de filtrado
+                PantallaUnidades(
+                    state = state,
+                    searchQuery = searchQuery,
+                    viajesGuardados = viajesGuardados,
+                    filtroActual = filtroActual, // 👈 Inyectamos el filtro seleccionado
+                    onSearchQueryChange = { nuevoTexto -> viewModel.updateSearchQuery(nuevoTexto) },
+                    onFiltroChange = { nuevoFiltro -> viewModel.updateFiltro(nuevoFiltro) }, // 👈 Evento de cambio de chip
+                    onGuardarClick = { idUnico -> viewModel.toggleGuardarViaje(idUnico) },
+                    onRetry = { viewModel.fetchViajes(forzar = true) }
+                )
+            } else {
+                // Pantalla de viajes (Acoplada al estado Success cuando esté lista)
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    when (state) {
+                        is UiState.Loading -> CircularProgressIndicator()
+                        is UiState.Error -> Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                        is UiState.Success -> Text("Historial de Viajes (${state.viajesFinalizados.size} completados)", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
