@@ -1,3 +1,4 @@
+
 package com.eor.ruteo.ui
 
 import androidx.compose.foundation.layout.Box
@@ -20,9 +21,8 @@ fun RuteoAppScreen(
     state: UiState,
     viewModel: RuteoViewModel
 ) {
-    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Unidades) }
+    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Viajes) }
 
-    // Estado para controlar la vista de Viajes
     val mostrarCompletados by viewModel.mostrarCompletados.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val viajesGuardados by viewModel.viajesGuardados.collectAsState()
@@ -35,10 +35,7 @@ fun RuteoAppScreen(
                     title = { Text(if (mostrarCompletados) "Viajes Completados" else "Viajes en Curso") },
                     actions = {
                         IconButton(onClick = { viewModel.toggleMostrarCompletados() }) {
-                            Icon(
-                                imageVector = if (mostrarCompletados) Icons.AutoMirrored.Filled.List else Icons.Default.CheckCircle,
-                                contentDescription = "Cambiar vista"
-                            )
+                            Icon(if (mostrarCompletados) Icons.AutoMirrored.Filled.List else Icons.Default.CheckCircle, "Cambiar vista")
                         }
                     }
                 )
@@ -46,18 +43,8 @@ fun RuteoAppScreen(
         },
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(
-                    selected = currentScreen == AppScreen.Viajes,
-                    onClick = { currentScreen = AppScreen.Viajes },
-                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Viajes") },
-                    label = { Text("Viajes") }
-                )
-                NavigationBarItem(
-                    selected = currentScreen == AppScreen.Unidades,
-                    onClick = { currentScreen = AppScreen.Unidades },
-                    icon = { Icon(Icons.Default.LocalShipping, contentDescription = "Unidades") },
-                    label = { Text("Unidades") }
-                )
+                NavigationBarItem(selected = currentScreen == AppScreen.Viajes, onClick = { currentScreen = AppScreen.Viajes }, icon = { Icon(Icons.AutoMirrored.Filled.List, "Viajes") }, label = { Text("Viajes") })
+                NavigationBarItem(selected = currentScreen == AppScreen.Unidades, onClick = { currentScreen = AppScreen.Unidades }, icon = { Icon(Icons.Default.LocalShipping, "Unidades") }, label = { Text("Unidades") })
             }
         }
     ) { innerPadding ->
@@ -70,15 +57,16 @@ fun RuteoAppScreen(
                         PantallaUnidades(
                             viajesActivos = state.viajesActivos,
                             searchQuery = searchQuery,
-                            filtroActual = filtroActual,
-                            onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-                            onFiltroChange = { viewModel.updateFiltro(it) }
+                            onSearchQueryChange = { viewModel.updateSearchQuery(it) }
                         )
                     } else {
-                        // Renderizamos la pantalla de viajes con dropdowns
                         PantallaViajes(
                             viajes = if (mostrarCompletados) state.viajesFinalizados else state.viajesActivos,
+                            searchQuery = searchQuery,
+                            filtroActual = filtroActual,
                             viajesGuardados = viajesGuardados,
+                            onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+                            onFiltroChange = { viewModel.updateFiltro(it) },
                             onGuardarClick = { viewModel.toggleGuardarViaje(it) }
                         )
                     }
