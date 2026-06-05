@@ -115,7 +115,7 @@ fun ViajeViajesCard(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = viaje.numeroUt.ifEmpty { "-" },
-                                    style = MaterialTheme.typography.displayLarge,
+                                    style = MaterialTheme.typography.displayMedium,
                                     fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.primary
                                 )
