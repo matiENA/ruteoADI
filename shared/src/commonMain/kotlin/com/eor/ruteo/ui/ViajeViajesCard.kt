@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,7 +40,6 @@ fun ViajeViajesCard(
     val rawColorHX = parsearColorHexKMP(viaje.colorHexHx)
     val baseColor = MaterialTheme.colorScheme.surface
 
-    // 🔥 Aumento de intensidad: Alpha sube a 0.5f para que los colores de la tarjeta destaquen más
     val colorA = if (rawColorA != Color.Transparent) rawColorA.copy(alpha = 0.5f) else baseColor
     val colorHX = if (rawColorHX != Color.Transparent) rawColorHX.copy(alpha = 0.5f) else baseColor
 
@@ -57,78 +57,118 @@ fun ViajeViajesCard(
                 .clickable { expanded = !expanded }
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // --- HEADER COLAPSADO ---
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+
+                // ==========================================
+                // HEADER COLAPSADO
+                // ==========================================
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = viaje.chofer.ifEmpty { "CHOFER S/D" }.uppercase(),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Placas: ${viaje.tractor} | ${viaje.semi}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Surface(
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = "Llegada a Planta: ${viaje.llegadaPlanta.ifEmpty { "-" }}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = "TD: ${viaje.numDespacho.ifEmpty { "S/D" }}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(start = 8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top // Alineación Top para que conviva bien con la UT gigante
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Columna Izquierda: Datos Operativos
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = viaje.numeroUt.ifEmpty { "-" },
-                                style = MaterialTheme.typography.displayLarge,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.primary
+                                text = viaje.chofer.ifEmpty { "CHOFER S/D" }.uppercase(),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(Modifier.width(8.dp))
-                            IconButton(onClick = onToggleGuardar) {
-                                Icon(
-                                    imageVector = if (isGuardado) Icons.Default.Star else StarBorderIconHistorial,
-                                    contentDescription = "Guardar",
-                                    tint = if (isGuardado) Color(0xFFFFD700) else MaterialTheme.colorScheme.outline
+                            Text(
+                                text = "Placas: ${viaje.tractor} | ${viaje.semi}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "Llegada a Planta: ${viaje.llegadaPlanta.ifEmpty { "-" }}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                                 )
                             }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "TD: ${viaje.numDespacho.ifEmpty { "S/D" }}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
-                        Icon(
-                            imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = "Expandir",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+
+                        // Columna Derecha: UT Gigante + Estrella
+                        Column(
+                            horizontalAlignment = Alignment.End, // Alineamos todo a la derecha
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = viaje.numeroUt.ifEmpty { "-" },
+                                    style = MaterialTheme.typography.displayLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                IconButton(onClick = onToggleGuardar) {
+                                    Icon(
+                                        imageVector = if (isGuardado) Icons.Default.Star else StarBorderIconHistorial,
+                                        contentDescription = "Guardar",
+                                        tint = if (isGuardado) Color(0xFFFFD700) else MaterialTheme.colorScheme.outline
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = "Expandir",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
+
+                    // 👇 ESQUINA INFERIOR DERECHA: TRACKING 👇
+                    // Mapeado fuera del Dropdown, asegurado en la base de la tarjeta colapsada
+                    if (viaje.ultimoTracking.isNotBlank()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End, // Lo tira contra el borde derecho
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Ubicación",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = viaje.ultimoTracking,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis // Pone "..." si el texto es excesivamente largo
+                            )
+                        }
+                    }
+                    // 👆 FIN TRACKING 👆
                 }
 
-                // --- DROPDOWN CLIENTES ---
+                // ==========================================
+                // DROPDOWN CLIENTES
+                // ==========================================
                 AnimatedVisibility(visible = expanded) {
                     Column {
                         HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
@@ -139,7 +179,6 @@ fun ViajeViajesCard(
                                     Spacer(Modifier.height(12.dp))
                                 }
 
-                                // Generamos el color determinista basado en el nombre del cliente
                                 val colorClienteBase = generarColorCliente(parada.destino)
                                 val colorFondoCliente = colorClienteBase.copy(alpha = 0.25f)
                                 val colorBordeCliente = colorClienteBase.copy(alpha = 0.8f)
@@ -216,21 +255,14 @@ fun ViajeViajesCard(
     }
 }
 
-// 👇 Generador Determinista de Colores Pastel
+// Generador Determinista de Colores Pastel
 private fun generarColorCliente(nombre: String): Color {
-    if (nombre.isBlank()) return Color(0xFFE0E0E0) // Gris por defecto si está vacío
+    if (nombre.isBlank()) return Color(0xFFE0E0E0)
 
     val paletaPastel = listOf(
-        Color(0xFF90CAF9), // Light Blue 200
-        Color(0xFFA5D6A7), // Green 200
-        Color(0xFFEF9A9A), // Red 200
-        Color(0xFFFFF59D), // Yellow 200
-        Color(0xFFCE93D8), // Purple 200
-        Color(0xFFB39DDB), // Deep Purple 200
-        Color(0xFF80DEEA), // Cyan 200
-        Color(0xFFFFCC80), // Teal 200
-        Color(0xFFFFAB91), // Orange 200
-        Color(0xFFF48FB1)  // Deep Orange 200
+        Color(0xFF90CAF9), Color(0xFFA5D6A7), Color(0xFFEF9A9A),
+        Color(0xFFFFF59D), Color(0xFFCE93D8), Color(0xFFB39DDB),
+        Color(0xFF80DEEA), Color(0xFFFFCC80), Color(0xFFFFAB91), Color(0xFFF48FB1)
     )
 
     val index = abs(nombre.hashCode()) % paletaPastel.size
