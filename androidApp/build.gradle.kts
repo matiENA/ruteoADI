@@ -18,14 +18,13 @@ kotlin {
 
 dependencies {
     implementation(projects.shared)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.compose.uiToolingPreview)
-    debugImplementation(libs.compose.uiTooling)
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation(libs.androidx.core.ktx) // Good to have for Core Android features
 
-    // 👇 FIREBASE (Apunta directamente al TOML)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.analytics)
+    // Firebase BoM and Messaging
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
 }
 
 
