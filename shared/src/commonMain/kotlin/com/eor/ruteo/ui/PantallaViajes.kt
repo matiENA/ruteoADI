@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,7 @@ fun PantallaViajes(
     viajesGuardados: Set<String>,
     onSearchQueryChange: (String) -> Unit,
     onFiltroChange: (FiltroTerminal) -> Unit,
-    onGuardarClick: (String) -> Unit
+    onGuardarClick: (ViajeIntegrado) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -86,7 +87,7 @@ fun PantallaViajes(
             coincideBusqueda && coincideFiltro
         }
 
-        // 4. AGRUPACIÓN POR FECHA (El nuevo "Índice")
+        // 4. AGRUPACIÓN POR FECHA
         val viajesAgrupadosPorFecha = remember(viajesFiltrados) {
             viajesFiltrados.groupBy { it.fechaPlanificada.ifEmpty { "Fecha S/D" } }
         }
@@ -101,12 +102,12 @@ fun PantallaViajes(
             ) {
                 viajesAgrupadosPorFecha.forEach { (fecha, viajesDeEsaFecha) ->
 
-                    // 👇 EL NUEVO HEADER DELIMITADOR 👇
+                    // HEADER DELIMITADOR (Sticky)
                     stickyHeader {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background) // Fondo sólido para que los items no se traslapen al hacer scroll
+                                .background(MaterialTheme.colorScheme.background)
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Surface(
@@ -129,7 +130,8 @@ fun PantallaViajes(
                         ViajeViajesCard(
                             viaje = viaje,
                             isGuardado = viajesGuardados.contains(viaje.idUnico),
-                            onToggleGuardar = { onGuardarClick(viaje.idUnico) }
+                            // 👇 CORREGIDO AQUÍ: Ahora pasa el objeto entero en lugar de solo el ID
+                            onToggleGuardar = { onGuardarClick(viaje) }
                         )
                     }
                 }
