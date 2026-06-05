@@ -31,7 +31,8 @@ class MainActivity : ComponentActivity() {
 
         // 👇 1. INYECTAR EL MANAGER NATIVO DE FIREBASE PARA ANDROID 👇
         // Esto reemplaza la variable global por defecto (No-Op) antes de que arranque la UI compartida.
-        globalNotificacionesManager = AndroidNotificacionesManager()
+        // Le pasamos el applicationContext de Android
+        globalNotificacionesManager = AndroidNotificacionesManager(applicationContext)
 
         // 👇 2. PEDIR PERMISO AL USUARIO 👇
         askNotificationPermission()

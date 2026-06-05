@@ -1,10 +1,12 @@
 package com.eor.ruteo
 
+import android.content.Context
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.ktx.messaging
 
-// The real Android implementation using the Firebase SDK
-class AndroidNotificacionesManager : NotificacionesManager {
+// 👇 Le agregamos el Context al constructor
+class AndroidNotificacionesManager(private val context: Context) : NotificacionesManager {
+
     override fun suscribirUT(numeroUt: String) {
         if (numeroUt.isBlank()) return
         val topic = "ut_$numeroUt"
@@ -12,8 +14,6 @@ class AndroidNotificacionesManager : NotificacionesManager {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     println("🔥 Suscrito exitosamente al tópico: $topic")
-                } else {
-                    println("❌ Falló la suscripción al tópico: $topic")
                 }
             }
     }
@@ -28,5 +28,10 @@ class AndroidNotificacionesManager : NotificacionesManager {
                 }
             }
     }
+
+    // 👇 AQUÍ ESTÁ LA FUNCIÓN QUE FALTABA
+    override fun mostrarNotificacionLocal(viaje: ViajeIntegrado) {
+        // Usamos el NotificacionHelper que creamos antes para dibujar la alerta
+        NotificacionHelper.mostrarNotificacionCambioEstado(context, viaje)
+    }
 }
-// ❌ MAKE SURE THERE IS NO 'actual fun getNotificacionesManager()' HERE ❌

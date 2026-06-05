@@ -56,6 +56,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.1.1")
         }
 
         // 👇 ESTE BLOQUE FALTABA: EL MOTOR DE RED PARA APPLE
