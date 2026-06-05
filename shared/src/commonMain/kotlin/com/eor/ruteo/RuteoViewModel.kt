@@ -21,11 +21,14 @@ enum class FiltroTerminal(val titulo: String) {
 class RuteoViewModel : ViewModel() {
 
     // ==========================================
-    // 1. REPOSITORIOS
+    // 1. REPOSITORIOS Y MANAGERS
     // ==========================================
     private val repository = ViajesRepository()
     // TODO: Instanciar el repositorio de persistencia local (Preferences/Room/Settings) en KMP
     // private val repositoryGuardados = ViajesGuardadosRepository()
+
+    // 👇 Usar la variable global
+    private val notificacionesManager = globalNotificacionesManager
 
     // ==========================================
     // 2. ESTADO DE LA UI (StateFlows)
@@ -78,7 +81,8 @@ class RuteoViewModel : ViewModel() {
                 val guardados = _viajesGuardados.value
                 response.data.forEach { viaje ->
                     if (guardados.contains(viaje.idUnico)) {
-                        suscribirUT(viaje.numeroUt)
+                        // 👇 ACTUALIZADO: Usamos el manager
+                        notificacionesManager.suscribirUT(viaje.numeroUt)
                     }
                 }
 
@@ -118,11 +122,13 @@ class RuteoViewModel : ViewModel() {
             if (guardadosActuales.contains(viaje.idUnico)) {
                 // Quitar de guardados y Firebase
                 guardadosActuales.remove(viaje.idUnico)
-                desuscribirUT(viaje.numeroUt)
+                // 👇 ACTUALIZADO: Usamos el manager
+                notificacionesManager.desuscribirUT(viaje.numeroUt)
             } else {
                 // Agregar a guardados y Firebase
                 guardadosActuales.add(viaje.idUnico)
-                suscribirUT(viaje.numeroUt)
+                // 👇 ACTUALIZADO: Usamos el manager
+                notificacionesManager.suscribirUT(viaje.numeroUt)
             }
 
             _viajesGuardados.value = guardadosActuales
