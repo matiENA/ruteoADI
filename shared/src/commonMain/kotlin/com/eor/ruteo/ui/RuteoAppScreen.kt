@@ -13,7 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.eor.ruteo.RuteoViewModel
 import com.eor.ruteo.UiState
-import kotlinx.coroutines.delay // 👈 Asegúrate de importar delay
+import kotlinx.coroutines.delay
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,20 +30,13 @@ fun RuteoAppScreen(
     val viajesGuardados by viewModel.viajesGuardados.collectAsState()
     val filtroActual by viewModel.filtroActual.collectAsState()
 
-    // =========================================================================
-    // 👇 IMPLEMENTACIÓN DEL POLLING (Cronómetro Silencioso) 👇
-    // =========================================================================
+    // Polling silencioso cada 60 segundos
     LaunchedEffect(Unit) {
-        // Se ejecuta en un hilo de fondo (Coroutina)
         while (true) {
-            // Esperamos 60 segundos antes de cada ciclo
             delay(60_000L)
-            // Hacemos el "fetch" pero le decimos que es "silencioso" (isPolling = true)
-            // forzar = true asegura que Ktor salte su caché y le pegue al endpoint.
             viewModel.fetchViajes(forzar = true, isPolling = true)
         }
     }
-    // =========================================================================
 
     Scaffold(
         topBar = {
@@ -58,8 +53,18 @@ fun RuteoAppScreen(
         },
         bottomBar = {
             NavigationBar {
-                NavigationBarItem(selected = currentScreen == AppScreen.Viajes, onClick = { currentScreen = AppScreen.Viajes }, icon = { Icon(Icons.AutoMirrored.Filled.List, "Viajes") }, label = { Text("Viajes") })
-                NavigationBarItem(selected = currentScreen == AppScreen.Unidades, onClick = { currentScreen = AppScreen.Unidades }, icon = { Icon(Icons.Default.LocalShipping, "Unidades") }, label = { Text("Unidades") })
+                NavigationBarItem(
+                    selected = currentScreen == AppScreen.Viajes,
+                    onClick = { currentScreen = AppScreen.Viajes },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, "Viajes") },
+                    label = { Text("Viajes") }
+                )
+                NavigationBarItem(
+                    selected = currentScreen == AppScreen.Unidades,
+                    onClick = { currentScreen = AppScreen.Unidades },
+                    icon = { Icon(Icons.Default.LocalShipping, "Unidades") },
+                    label = { Text("Unidades") }
+                )
             }
         }
     ) { innerPadding ->
@@ -72,7 +77,14 @@ fun RuteoAppScreen(
                         PantallaUnidades(
                             viajesActivos = state.viajesActivos,
                             searchQuery = searchQuery,
-                            onSearchQueryChange = { viewModel.updateSearchQuery(it) }
+                            onSearchQueryChange = { newQuery ->
+                                viewModel.updateSearchQuery(newQuery)
+                                // 👇 Si el usuario hace clic en un TD (que actualiza el query),
+                                // saltamos automáticamente a la pantalla de viajes para mostrar el resultado
+                                if (newQuery.isNotEmpty()) {
+                                    currentScreen = AppScreen.Viajes
+                                }
+                            }
                         )
                     } else {
                         PantallaViajes(

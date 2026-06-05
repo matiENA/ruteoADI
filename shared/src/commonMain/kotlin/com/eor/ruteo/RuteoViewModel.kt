@@ -3,8 +3,7 @@ package com.eor.ruteo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eor.ruteo.data.ViajesRepository
-// Asegúrate de importar tu repositorio de guardados si está en otra ruta
-// import com.eor.ruteo.data.ViajesGuardadosRepository
+import com.eor.ruteo.data.ViajesGuardadosRepository // Asegúrate de este import
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,19 +23,19 @@ class RuteoViewModel : ViewModel() {
     // 1. REPOSITORIOS Y MANAGERS
     // ==========================================
     private val repository = ViajesRepository()
-    // TODO: Instanciar el repositorio de persistencia local (Preferences/Room/Settings) en KMP
-    // private val repositoryGuardados = ViajesGuardadosRepository()
+    // Instanciamos el repositorio con la factoría de KMP Settings
+    private val repositoryGuardados = ViajesGuardadosRepository(createSettingsFactory())
 
-    // 👇 Usar la variable global
     private val notificacionesManager = globalNotificacionesManager
 
     // ==========================================
-    // 2. ESTADO DE LA UI (StateFlows)
+    // 2. ESTADO DE LA UI
     // ==========================================
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _viajesGuardados = MutableStateFlow<Set<String>>(emptySet())
+    // 👇 INICIALIZACIÓN INMEDIATA: Leemos el disco al arrancar para evitar que las estrellas parpadeen o desaparezcan
+    private val _viajesGuardados = MutableStateFlow(repositoryGuardados.obtenerViajesGuardados())
     val viajesGuardados: StateFlow<Set<String>> = _viajesGuardados.asStateFlow()
 
     private val _filtroActual = MutableStateFlow(FiltroTerminal.TODOS)
@@ -52,18 +51,12 @@ class RuteoViewModel : ViewModel() {
     // 3. INICIALIZACIÓN
     // ==========================================
     init {
-        viewModelScope.launch {
-            // A. Primero cargamos la persistencia local de la estrella ⭐
-            // val guardados = repositoryGuardados.obtenerViajesGuardados()
-            // _viajesGuardados.value = guardados
-
-            // B. Luego consultamos la red
-            fetchViajes(forzar = false, isPolling = false)
-        }
+        // Solo lanzamos la carga de red. La caché ya está cargada en la declaración de _viajesGuardados
+        fetchViajes(forzar = false, isPolling = false)
     }
 
     // ==========================================
-    // 4. LÓGICA DE RED Y POLLING (Networking)
+    // 4. LÓGICA DE RED Y POLLING
     // ==========================================
     fun fetchViajes(forzar: Boolean = false, isPolling: Boolean = false) {
         if (!isPolling) {
@@ -81,7 +74,6 @@ class RuteoViewModel : ViewModel() {
                 val guardados = _viajesGuardados.value
                 response.data.forEach { viaje ->
                     if (guardados.contains(viaje.idUnico)) {
-                        // 👇 ACTUALIZADO: Usamos el manager
                         notificacionesManager.suscribirUT(viaje.numeroUt)
                     }
                 }
@@ -101,40 +93,29 @@ class RuteoViewModel : ViewModel() {
     }
 
     // ==========================================
-    // 5. MUTADORES DE UI Y NEGOCIO
+    // 5. MUTADORES
     // ==========================================
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-    }
-
-    fun updateFiltro(filtro: FiltroTerminal) {
-        _filtroActual.value = filtro
-    }
-
-    fun toggleMostrarCompletados() {
-        _mostrarCompletados.value = !_mostrarCompletados.value
-    }
+    fun updateSearchQuery(query: String) { _searchQuery.value = query }
+    fun updateFiltro(filtro: FiltroTerminal) { _filtroActual.value = filtro }
+    fun toggleMostrarCompletados() { _mostrarCompletados.value = !_mostrarCompletados.value }
 
     fun toggleGuardarViaje(viaje: ViajeIntegrado) {
         viewModelScope.launch {
             val guardadosActuales = _viajesGuardados.value.toMutableSet()
 
             if (guardadosActuales.contains(viaje.idUnico)) {
-                // Quitar de guardados y Firebase
                 guardadosActuales.remove(viaje.idUnico)
-                // 👇 ACTUALIZADO: Usamos el manager
                 notificacionesManager.desuscribirUT(viaje.numeroUt)
             } else {
-                // Agregar a guardados y Firebase
                 guardadosActuales.add(viaje.idUnico)
-                // 👇 ACTUALIZADO: Usamos el manager
                 notificacionesManager.suscribirUT(viaje.numeroUt)
             }
 
+            // Actualizar estado reactivo
             _viajesGuardados.value = guardadosActuales
 
-            // Persistir localmente para el próximo inicio de la app
-            // repositoryGuardados.guardarViajes(guardadosActuales)
+            // 👇 PERSISTIR EN DISCO (Esto es lo que faltaba para que no se borren)
+            repositoryGuardados.guardarViajes(guardadosActuales)
         }
     }
 }

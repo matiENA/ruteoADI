@@ -38,7 +38,7 @@ fun PantallaViajes(
 
         // 1. Buscador
         OutlinedTextField(
-            value = searchQuery,
+            value = searchQuery, // ViewModel.searchQuery.collectAsState()
             onValueChange = onSearchQueryChange,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             placeholder = { Text("Buscar TD, Chofer o Patente...") },

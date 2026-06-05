@@ -29,12 +29,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // 👇 1. INYECTAR EL MANAGER NATIVO DE FIREBASE PARA ANDROID 👇
-        // Esto reemplaza la variable global por defecto (No-Op) antes de que arranque la UI compartida.
-        // Le pasamos el applicationContext de Android
+        // 👇 1. INYECTAR EL CONTEXTO GLOBAL PARA LA CACHÉ (FALTABA ESTO) 👇
+        appContextForCache = applicationContext
+
+        // 👇 2. INYECTAR EL MANAGER NATIVO DE FIREBASE PARA ANDROID 👇
         globalNotificacionesManager = AndroidNotificacionesManager(applicationContext)
 
-        // 👇 2. PEDIR PERMISO AL USUARIO 👇
+        // 👇 3. PEDIR PERMISO AL USUARIO 👇
         askNotificationPermission()
 
         setContent {

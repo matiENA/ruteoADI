@@ -61,13 +61,19 @@ fun PantallaUnidades(
         if (viajesAgrupadosPorUt.isEmpty()) {
             Feedback(mensaje = "No hay unidades encontradas.", icono = Icons.Default.Search)
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 80.dp)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
                 items(viajesAgrupadosPorUt.keys.toList(), key = { it }) { numeroUt ->
                     val viajesDeEstaUt = viajesAgrupadosPorUt[numeroUt] ?: emptyList()
                     UnidadCard(
                         numeroUt = numeroUt,
                         viajesDeEstaUt = viajesDeEstaUt,
-                        onTdClick = { onSearchQueryChange(it) },
+                        onTdClick = { td ->
+                            // Al hacer clic, enviamos el despacho al buscador y el padre hará la navegación
+                            onSearchQueryChange(td)
+                        },
                         modifier = Modifier.animateItem()
                     )
                 }
@@ -76,7 +82,6 @@ fun PantallaUnidades(
     }
 }
 
-// UnidadCard permanece igual al código anterior...
 @Composable
 fun UnidadCard(
     numeroUt: String,
@@ -112,7 +117,13 @@ fun UnidadCard(
                     val badgeColor = if (isVacio) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
                     val badgeTextColor = if (isVacio) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
 
-                    Row(Modifier.fillMaxWidth().clickable { onTdClick(viaje.numDespacho) }.padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clickable { onTdClick(viaje.numDespacho) } // Se activa el callback
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text("TD: ${viaje.numDespacho.ifEmpty { "S/D" }}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)
                         Surface(color = badgeColor, shape = RoundedCornerShape(4.dp)) {
                             Text(estadoLabel.uppercase(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = badgeTextColor, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
