@@ -1,4 +1,3 @@
-
 package com.eor.ruteo.ui
 
 import androidx.compose.foundation.layout.Box
@@ -14,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.eor.ruteo.RuteoViewModel
 import com.eor.ruteo.UiState
+import kotlinx.coroutines.delay // 👈 Asegúrate de importar delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +27,21 @@ fun RuteoAppScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val viajesGuardados by viewModel.viajesGuardados.collectAsState()
     val filtroActual by viewModel.filtroActual.collectAsState()
+
+    // =========================================================================
+    // 👇 IMPLEMENTACIÓN DEL POLLING (Cronómetro Silencioso) 👇
+    // =========================================================================
+    LaunchedEffect(Unit) {
+        // Se ejecuta en un hilo de fondo (Coroutina)
+        while (true) {
+            // Esperamos 60 segundos antes de cada ciclo
+            delay(60_000L)
+            // Hacemos el "fetch" pero le decimos que es "silencioso" (isPolling = true)
+            // forzar = true asegura que Ktor salte su caché y le pegue al endpoint.
+            viewModel.fetchViajes(forzar = true, isPolling = true)
+        }
+    }
+    // =========================================================================
 
     Scaffold(
         topBar = {

@@ -66,7 +66,7 @@ fun ViajeViajesCard(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Top // Alineación Top para que conviva bien con la UT gigante
+                        verticalAlignment = Alignment.Top
                     ) {
                         // Columna Izquierda: Datos Operativos
                         Column(modifier = Modifier.weight(1f)) {
@@ -109,13 +109,13 @@ fun ViajeViajesCard(
 
                         // Columna Derecha: UT Gigante + Estrella
                         Column(
-                            horizontalAlignment = Alignment.End, // Alineamos todo a la derecha
+                            horizontalAlignment = Alignment.End,
                             modifier = Modifier.padding(start = 8.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = viaje.numeroUt.ifEmpty { "-" },
-                                    style = MaterialTheme.typography.displayMedium,
+                                    style = MaterialTheme.typography.displayLarge,
                                     fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -136,34 +136,50 @@ fun ViajeViajesCard(
                         }
                     }
 
-                    // 👇 ESQUINA INFERIOR DERECHA: TRACKING 👇
-                    // Mapeado fuera del Dropdown, asegurado en la base de la tarjeta colapsada
+                    // 👇 ESQUINA INFERIOR DERECHA: TRACKING EN BADGE 👇
                     if (viaje.ultimoTracking.isNotBlank()) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.End, // Lo tira contra el borde derecho
+                            horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Ubicación",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = viaje.ultimoTracking,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis // Pone "..." si el texto es excesivamente largo
-                            )
+                            val badgeColor = if (rawColorHX != Color.Transparent) rawColorHX.copy(alpha = 0.8f) else MaterialTheme.colorScheme.surfaceVariant
+
+                            // Calculo de luminosidad en línea (Evita errores de Top-Level declarations)
+                            val luminance = (0.299f * badgeColor.red + 0.587f * badgeColor.green + 0.114f * badgeColor.blue)
+                            val textColor = if (luminance > 0.5f) Color.Black else Color.White
+
+                            Surface(
+                                color = badgeColor,
+                                shape = RoundedCornerShape(16.dp),
+                                shadowElevation = 2.dp
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = "Ubicación",
+                                        tint = textColor,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = viaje.ultimoTracking,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = textColor,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
-                    // 👆 FIN TRACKING 👆
+                    // 👆 FIN TRACKING EN BADGE 👆
                 }
 
                 // ==========================================
@@ -255,21 +271,17 @@ fun ViajeViajesCard(
     }
 }
 
-// Generador Determinista de Colores Pastel
 private fun generarColorCliente(nombre: String): Color {
     if (nombre.isBlank()) return Color(0xFFE0E0E0)
-
     val paletaPastel = listOf(
         Color(0xFF90CAF9), Color(0xFFA5D6A7), Color(0xFFEF9A9A),
         Color(0xFFFFF59D), Color(0xFFCE93D8), Color(0xFFB39DDB),
         Color(0xFF80DEEA), Color(0xFFFFCC80), Color(0xFFFFAB91), Color(0xFFF48FB1)
     )
-
     val index = abs(nombre.hashCode()) % paletaPastel.size
     return paletaPastel[index]
 }
 
-// Vector de soporte para la Estrella Original
 private val StarBorderIconHistorial: ImageVector
     get() {
         val existing = _starBorderIconHistorial

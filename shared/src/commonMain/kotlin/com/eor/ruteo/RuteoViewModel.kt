@@ -43,8 +43,13 @@ class RuteoViewModel : ViewModel() {
         fetchViajes()
     }
 
-    fun fetchViajes(forzar: Boolean = false) {
-        _uiState.value = UiState.Loading
+    // En tu shared/src/commonMain/kotlin/com/eor/ruteo/RuteoViewModel.kt
+
+    fun fetchViajes(forzar: Boolean = false, isPolling: Boolean = false) {
+        // Solo mostramos Loading si NO es un polling silencioso
+        if (!isPolling) {
+            _uiState.value = UiState.Loading
+        }
 
         viewModelScope.launch {
             val response = repository.obtenerViajes(forzarActualizacion = forzar)
@@ -59,8 +64,11 @@ class RuteoViewModel : ViewModel() {
                     viajesFinalizados = viajesFinalizados
                 )
             } else {
-                val mensaje = if (response.success) "No hay viajes registrados operativos." else "Error de conexión con el servidor logístico."
-                _uiState.value = UiState.Error(mensaje)
+                // Si la respuesta está vacía o falla, y no es polling, mostramos el error
+                if (!isPolling || _uiState.value is UiState.Error) {
+                    val mensaje = if (response.success) "No hay viajes registrados operativos." else "Error de conexión con el servidor logístico."
+                    _uiState.value = UiState.Error(mensaje)
+                }
             }
         }
     }
