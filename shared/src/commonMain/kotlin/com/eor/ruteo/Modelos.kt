@@ -1,6 +1,7 @@
 package com.eor.ruteo
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
 @Serializable
 data class SheetResponse(
@@ -42,7 +43,12 @@ data class ViajeIntegrado(
     val nViaje: String = "",
     val llegadaPlanta: String = "",
     val horarioVacio: String = "",
-    val estadoUt: String = ""
+    val estadoUt: String = "",
+    // 1. Para alimentar el Dropdown dinámico en la vista (Prägnanz: Agrupación)
+    val cliente: String = "",
+    // 2. Mapeo directo del nuevo header en tu array JSON
+    @SerialName("destinoar")
+    val destinoar: String = ""
 )
 
 @Serializable

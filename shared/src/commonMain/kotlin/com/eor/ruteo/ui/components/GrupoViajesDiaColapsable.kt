@@ -59,7 +59,7 @@ fun GrupoViajesDiaColapsable(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "${viajes.size} despachos operacionales",
+                        text = "${viajes.size} viajes",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
