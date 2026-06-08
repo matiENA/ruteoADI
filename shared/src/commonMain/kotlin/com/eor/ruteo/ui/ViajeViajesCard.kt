@@ -59,7 +59,7 @@ fun ViajeViajesCard(
             Column(modifier = Modifier.fillMaxWidth()) {
 
                 // ==========================================
-                // HEADER COLAPSADO
+                // HEADER COLAPSADO (Gestalt: Prägnanz & Jerarquía)
                 // ==========================================
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
@@ -68,43 +68,68 @@ fun ViajeViajesCard(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top
                     ) {
-                        // Columna Izquierda: Datos Operativos
+                        // Columna Izquierda: Datos Operativos Simplificados
                         Column(modifier = Modifier.weight(1f)) {
+
+                            // 1. Patentes (Figura principal, sin ruido visual)
+                            val patentes = listOf(viaje.tractor, viaje.semi).filter { it.isNotBlank() }.joinToString(" | ")
                             Text(
-                                text = viaje.chofer.ifEmpty { "CHOFER S/D" }.uppercase(),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
+                                text = patentes.uppercase().ifEmpty { "SIN PATENTE" },
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+
+                            // 2. Destino General (Leído del nuevo nodo JSON destinoar)
+                            if (viaje.destinoar.isNotBlank()) {
+                                Text(
+                                    text = viaje.destinoar.uppercase(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // 3. Chofer (Agrupación por proximidad)
                             Text(
-                                text = "Placas: ${viaje.tractor} | ${viaje.semi}",
+                                text = viaje.chofer.ifEmpty { "Chofer S/D" },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
 
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Surface(
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                Text(
-                                    text = "Llegada a Planta: ${viaje.llegadaPlanta.ifEmpty { "-" }}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                )
-                            }
-
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(
-                                text = "TD: ${viaje.numDespacho.ifEmpty { "S/D" }}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            // 4. Planta y TD (Elementos secundarios)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (viaje.llegadaPlanta.isNotBlank()) {
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Planta: ${viaje.llegadaPlanta}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+
+                                if (viaje.numDespacho.isNotBlank()) {
+                                    Text(
+                                        text = "TD: ${viaje.numDespacho}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
 
                         // Columna Derecha: UT Gigante + Estrella
@@ -136,7 +161,7 @@ fun ViajeViajesCard(
                         }
                     }
 
-                    // 👇 ESQUINA INFERIOR DERECHA: TRACKING EN BADGE 👇
+                    // ESQUINA INFERIOR DERECHA: TRACKING EN BADGE
                     if (viaje.ultimoTracking.isNotBlank()) {
                         Row(
                             modifier = Modifier
@@ -146,8 +171,6 @@ fun ViajeViajesCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             val badgeColor = if (rawColorHX != Color.Transparent) rawColorHX.copy(alpha = 0.8f) else MaterialTheme.colorScheme.surfaceVariant
-
-                            // Calculo de luminosidad en línea (Evita errores de Top-Level declarations)
                             val luminance = (0.299f * badgeColor.red + 0.587f * badgeColor.green + 0.114f * badgeColor.blue)
                             val textColor = if (luminance > 0.5f) Color.Black else Color.White
 
@@ -179,11 +202,10 @@ fun ViajeViajesCard(
                             }
                         }
                     }
-                    // 👆 FIN TRACKING EN BADGE 👆
                 }
 
                 // ==========================================
-                // DROPDOWN CLIENTES
+                // DROPDOWN CLIENTES / PARADAS
                 // ==========================================
                 AnimatedVisibility(visible = expanded) {
                     Column {
@@ -195,7 +217,10 @@ fun ViajeViajesCard(
                                     Spacer(Modifier.height(12.dp))
                                 }
 
-                                val colorClienteBase = generarColorCliente(parada.destino)
+                                // Si el modelo ParadaViaje también se actualizó a destinoar, cámbialo aquí.
+                                // Por defecto, usamos el destino original de la parada para diferenciar el ruteo interno.
+                                val nombreRender = parada.destino.ifEmpty { viaje.cliente.ifEmpty { "Cliente S/D" } }
+                                val colorClienteBase = generarColorCliente(nombreRender)
                                 val colorFondoCliente = colorClienteBase.copy(alpha = 0.25f)
                                 val colorBordeCliente = colorClienteBase.copy(alpha = 0.8f)
 
@@ -221,7 +246,7 @@ fun ViajeViajesCard(
                                             ) {
                                                 Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                                                     Text(
-                                                        text = parada.destino.ifEmpty { "Cliente S/D" },
+                                                        text = nombreRender,
                                                         style = MaterialTheme.typography.titleSmall,
                                                         fontWeight = FontWeight.ExtraBold,
                                                         color = MaterialTheme.colorScheme.onSurface
