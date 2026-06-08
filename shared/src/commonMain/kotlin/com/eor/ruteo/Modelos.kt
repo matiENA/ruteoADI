@@ -1,7 +1,6 @@
 package com.eor.ruteo
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerialName
 
 @Serializable
 data class SheetResponse(
@@ -45,24 +44,18 @@ data class ViajeIntegrado(
     val horarioVacio: String = "",
     val estadoUt: String = "",
     val cliente: String = "",
-
-    // 👇 AHORA LEE EL HEADER "DESTINOS" EXACTO DE LA HOJA 1 👇
-    @SerialName("DESTINOS")
-    val destinoAR: String = ""
+    val destinoAR: String = "" // Recibe el dato limpio del backend
 )
 
 @Serializable
 data class ParadaViaje(
     val destino: String = "",
+    val destinoAR: String = "", // Recibe el dato limpio de la parada
     val producto: String = "",
     val cantidad: String = "",
     val cisternado: String = "",
     val direccion: String = "",
-    val hexCliente: String = "",
-
-    // 👇 AHORA LEE EL HEADER "DESTINOS" EXACTO DE LA HOJA 1 👇
-    @SerialName("DESTINOS")
-    val destinoAR: String = ""
+    val hexCliente: String = ""
 )
 
 sealed class UiState {
