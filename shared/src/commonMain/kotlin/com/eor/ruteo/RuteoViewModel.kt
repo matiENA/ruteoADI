@@ -118,4 +118,27 @@ class RuteoViewModel : ViewModel() {
             repositoryGuardados.guardarViajes(guardadosActuales)
         }
     }
+
+    // Agrega esto en RuteoViewModel.kt
+    fun guardarViajesDelDia(viajesDelDia: List<ViajeIntegrado>) {
+        viewModelScope.launch {
+            val guardadosActuales = _viajesGuardados.value.toMutableSet()
+            var huboCambios = false
+
+            viajesDelDia.forEach { viaje ->
+                // Si el viaje no está guardado, lo agregamos y suscribimos
+                if (!guardadosActuales.contains(viaje.idUnico)) {
+                    guardadosActuales.add(viaje.idUnico)
+                    notificacionesManager.suscribirUT(viaje.numeroUt)
+                    huboCambios = true
+                }
+            }
+
+            // Solo emitimos estado y escribimos en disco si realmente agregamos algo nuevo
+            if (huboCambios) {
+                _viajesGuardados.value = guardadosActuales
+                repositoryGuardados.guardarViajes(guardadosActuales)
+            }
+        }
+    }
 }

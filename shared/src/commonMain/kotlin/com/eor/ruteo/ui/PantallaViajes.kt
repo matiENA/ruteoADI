@@ -1,13 +1,11 @@
 package com.eor.ruteo.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
@@ -15,13 +13,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.eor.ruteo.FiltroTerminal
 import com.eor.ruteo.ViajeIntegrado
 import com.eor.ruteo.ui.components.Feedback
+
+// 👇 IMPORTANTE: Asegúrate de importar el componente colapsable que acabamos de arreglar
+import com.eor.ruteo.ui.components.GrupoViajesDiaColapsable
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -32,13 +31,14 @@ fun PantallaViajes(
     viajesGuardados: Set<String>,
     onSearchQueryChange: (String) -> Unit,
     onFiltroChange: (FiltroTerminal) -> Unit,
-    onGuardarClick: (ViajeIntegrado) -> Unit
+    onGuardarClick: (ViajeIntegrado) -> Unit,
+    onGuardarTodos: (List<ViajeIntegrado>) -> Unit // 👇 NUEVO CALLBACK PARA EL BOTÓN MASIVO
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
 
         // 1. Buscador
         OutlinedTextField(
-            value = searchQuery, // ViewModel.searchQuery.collectAsState()
+            value = searchQuery,
             onValueChange = onSearchQueryChange,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             placeholder = { Text("Buscar TD, Chofer o Patente...") },
@@ -87,12 +87,12 @@ fun PantallaViajes(
             coincideBusqueda && coincideFiltro
         }
 
-        // 4. AGRUPACIÓN POR FECHA
+        // 4. AGRUPACIÓN POR FECHA PLANIFICADA
         val viajesAgrupadosPorFecha = remember(viajesFiltrados) {
             viajesFiltrados.groupBy { it.fechaPlanificada.ifEmpty { "Fecha S/D" } }
         }
 
-        // 5. Renderizado con Headers
+        // 5. Renderizado con el Componente Colapsable
         if (viajesFiltrados.isEmpty()) {
             Feedback(mensaje = "No hay viajes para este filtro.", icono = Icons.Default.Info)
         } else {
@@ -100,40 +100,19 @@ fun PantallaViajes(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                // Iteramos sobre los grupos (Días)
                 viajesAgrupadosPorFecha.forEach { (fecha, viajesDeEsaFecha) ->
 
-                    // HEADER DELIMITADOR (Sticky)
-                    stickyHeader {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background)
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = "PLANIFICADO: ${fecha.uppercase()}",
-                                    color = MaterialTheme.colorScheme.surface,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // LAS TARJETAS DE ESA FECHA
-                    items(viajesDeEsaFecha, key = { it.idUnico }) { viaje ->
-                        ViajeViajesCard(
-                            viaje = viaje,
-                            isGuardado = viajesGuardados.contains(viaje.idUnico),
-                            // 👇 CORREGIDO AQUÍ: Ahora pasa el objeto entero en lugar de solo el ID
-                            onToggleGuardar = { onGuardarClick(viaje) }
+                    item(key = fecha) {
+                        GrupoViajesDiaColapsable(
+                            fecha = "PLANIFICADO: ${fecha.uppercase()}",
+                            viajes = viajesDeEsaFecha,
+                            viajesGuardados = viajesGuardados,
+                            onGuardarTodos = { lista -> onGuardarTodos(lista) },
+                            onGuardarClick = { viaje -> onGuardarClick(viaje) }
                         )
                     }
+
                 }
             }
         }
