@@ -59,7 +59,7 @@ fun ViajeViajesCard(
             Column(modifier = Modifier.fillMaxWidth()) {
 
                 // ==========================================
-                // HEADER COLAPSADO (Gestalt: Prägnanz & Jerarquía)
+                // HEADER COLAPSADO
                 // ==========================================
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
@@ -68,59 +68,50 @@ fun ViajeViajesCard(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.Top
                     ) {
-                        // Columna Izquierda: Datos Operativos Simplificados
+                        // Columna Izquierda
                         Column(modifier = Modifier.weight(1f)) {
 
-                            // 1. Patentes (Figura principal, sin ruido visual)
+                            // 1. Patentes
                             val patentes = listOf(viaje.tractor, viaje.semi).filter { it.isNotBlank() }.joinToString(" | ")
                             Text(
                                 text = patentes.uppercase().ifEmpty { "SIN PATENTE" },
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
 
-                            // 2. Destino General (Leído del nuevo nodo JSON destinoar)
-                            if (viaje.destinoar.isNotBlank()) {
+                            // 2. Destino General (Removido DESTINO S/D. Si no hay, no ocupa espacio visual)
+                            if (viaje.destinoAR.isNotBlank()) {
                                 Text(
-                                    text = viaje.destinoar.uppercase(),
+                                    text = viaje.destinoAR.uppercase(),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
                             Spacer(modifier = Modifier.height(4.dp))
 
-                            // 3. Chofer (Agrupación por proximidad)
+                            // 3. Chofer
                             Text(
                                 text = viaje.chofer.ifEmpty { "Chofer S/D" },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // 4. Planta y TD (Elementos secundarios)
+                            // 4. TD y Planta
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                if (viaje.llegadaPlanta.isNotBlank()) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "Planta: ${viaje.llegadaPlanta}",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                        )
-                                    }
-                                }
-
                                 if (viaje.numDespacho.isNotBlank()) {
                                     Text(
                                         text = "TD: ${viaje.numDespacho}",
@@ -128,11 +119,30 @@ fun ViajeViajesCard(
                                         fontWeight = FontWeight.ExtraBold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
+
+                                if (viaje.llegadaPlanta.isNotBlank()) {
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                                        shape = RoundedCornerShape(4.dp),
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    ) {
+                                        Text(
+                                            text = "Planta: ${viaje.llegadaPlanta}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        // Columna Derecha: UT Gigante + Estrella
+                        // Columna Derecha: UT + Estrella
                         Column(
                             horizontalAlignment = Alignment.End,
                             modifier = Modifier.padding(start = 8.dp)
@@ -161,7 +171,7 @@ fun ViajeViajesCard(
                         }
                     }
 
-                    // ESQUINA INFERIOR DERECHA: TRACKING EN BADGE
+                    // ESQUINA INFERIOR DERECHA: TRACKING
                     if (viaje.ultimoTracking.isNotBlank()) {
                         Row(
                             modifier = Modifier
@@ -205,7 +215,7 @@ fun ViajeViajesCard(
                 }
 
                 // ==========================================
-                // DROPDOWN CLIENTES / PARADAS
+                // DROPDOWN EXPANDIDO (Paradas)
                 // ==========================================
                 AnimatedVisibility(visible = expanded) {
                     Column {
@@ -217,9 +227,9 @@ fun ViajeViajesCard(
                                     Spacer(Modifier.height(12.dp))
                                 }
 
-                                // Si el modelo ParadaViaje también se actualizó a destinoar, cámbialo aquí.
-                                // Por defecto, usamos el destino original de la parada para diferenciar el ruteo interno.
-                                val nombreRender = parada.destino.ifEmpty { viaje.cliente.ifEmpty { "Cliente S/D" } }
+                                // Si "DESTINOS" está vacío, recurrimos a "DESTINO" (nombre largo de respaldo)
+                                val nombreRender = parada.destinoAR.ifEmpty { parada.destino.ifEmpty { "Cliente S/D" } }
+
                                 val colorClienteBase = generarColorCliente(nombreRender)
                                 val colorFondoCliente = colorClienteBase.copy(alpha = 0.25f)
                                 val colorBordeCliente = colorClienteBase.copy(alpha = 0.8f)
@@ -270,7 +280,14 @@ fun ViajeViajesCard(
                                             Spacer(Modifier.height(6.dp))
                                             Text("Producto: ${parada.producto}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
                                             Text("Cisternado Sugerido: ${parada.cisternado}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
-                                            Text("Dir: ${parada.direccion}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+
+                                            Text(
+                                                text = "Dir: ${parada.direccion}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }

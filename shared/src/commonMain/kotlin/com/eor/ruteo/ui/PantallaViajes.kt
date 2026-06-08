@@ -51,8 +51,15 @@ fun PantallaViajes(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Buscar TD, Patente...") },
+                placeholder = { Text("Buscar TD, Patente o Chofer...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { onSearchQueryChange("") }) {
+                            Icon(Icons.Default.Close, contentDescription = "Borrar")
+                        }
+                    }
+                },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium
             )
@@ -117,12 +124,25 @@ fun PantallaViajes(
 
         // FILTRADO LÓGICO
         val viajesFiltrados = viajes.filter { viaje ->
+            // Búsqueda por texto (Patente, Despacho, Chofer)
             val coincideBusqueda = viaje.tractor.contains(searchQuery, ignoreCase = true) ||
-                    viaje.numDespacho.contains(searchQuery, ignoreCase = true)
-            val coincideCliente = clienteSeleccionado == "Todos los clientes" || viaje.cliente.equals(clienteSeleccionado, ignoreCase = true)
-            // ... (tu lógica de coincideFiltro terminal) ...
+                    viaje.numDespacho.contains(searchQuery, ignoreCase = true) ||
+                    viaje.chofer.contains(searchQuery, ignoreCase = true)
 
-            coincideBusqueda && coincideCliente
+            // Búsqueda por Dropdown de cliente
+            val coincideCliente = clienteSeleccionado == "Todos los clientes" || viaje.cliente.equals(clienteSeleccionado, ignoreCase = true)
+
+            // Búsqueda por Chip de Terminal o Guardados
+            val coincideFiltro = when (filtroActual) {
+                FiltroTerminal.TODOS -> true
+                FiltroTerminal.GUARDADOS -> viajesGuardados.contains(viaje.idUnico)
+                FiltroTerminal.PLAZA_HUINCUL -> viaje.terminalOrigen.contains("Huincul", ignoreCase = true)
+                FiltroTerminal.DOCK_SUD -> viaje.terminalOrigen.contains("Dock Sud", ignoreCase = true)
+                FiltroTerminal.SIN_TERMINAL -> viaje.terminalOrigen.isBlank() || viaje.terminalOrigen.contains("n/a", ignoreCase = true)
+            }
+
+            // Exigimos que todas las condiciones se cumplan
+            coincideBusqueda && coincideCliente && coincideFiltro
         }
 
         // RENDERIZADO
@@ -135,9 +155,10 @@ fun PantallaViajes(
             ) {
                 if (agruparPorDia) {
                     // MODO GESTALT (Agrupados / Planificados)
-                    val viajesAgrupados = viajesFiltrados.groupBy { it.fechaPlanificada.ifEmpty { "S/D" } }
+                    val viajesAgrupados = viajesFiltrados.groupBy { it.fechaPlanificada.ifEmpty { "Fecha S/D" } }
+
                     viajesAgrupados.forEach { (fecha, viajesDeEsaFecha) ->
-                        item(key = fecha) {
+                        item(key = "grupo_$fecha") {
                             GrupoViajesDiaColapsable(
                                 fecha = "PLANIFICADO: ${fecha.uppercase()}",
                                 viajes = viajesDeEsaFecha,

@@ -44,11 +44,11 @@ data class ViajeIntegrado(
     val llegadaPlanta: String = "",
     val horarioVacio: String = "",
     val estadoUt: String = "",
-    // 1. Para alimentar el Dropdown dinámico en la vista (Prägnanz: Agrupación)
     val cliente: String = "",
-    // 2. Mapeo directo del nuevo header en tu array JSON
-    @SerialName("destinoar")
-    val destinoar: String = ""
+
+    // 👇 AHORA LEE EL HEADER "DESTINOS" EXACTO DE LA HOJA 1 👇
+    @SerialName("DESTINOS")
+    val destinoAR: String = ""
 )
 
 @Serializable
@@ -58,10 +58,13 @@ data class ParadaViaje(
     val cantidad: String = "",
     val cisternado: String = "",
     val direccion: String = "",
-    val hexCliente: String = ""
+    val hexCliente: String = "",
+
+    // 👇 AHORA LEE EL HEADER "DESTINOS" EXACTO DE LA HOJA 1 👇
+    @SerialName("DESTINOS")
+    val destinoAR: String = ""
 )
 
-// Este se mantiene igual para tu UI
 sealed class UiState {
     object Loading : UiState()
     data class Success(
