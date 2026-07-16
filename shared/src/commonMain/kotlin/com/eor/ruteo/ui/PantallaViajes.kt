@@ -30,69 +30,30 @@ fun PantallaViajes(
     onGuardarClick: (ViajeIntegrado) -> Unit,
     onGuardarTodos: (List<ViajeIntegrado>) -> Unit
 ) {
-    // 1. ESTADOS LOCALES (Dropdown y Toggle de Agrupación)
-    var agruparPorDia by remember { mutableStateOf(true) } // Toggle para revertir planificados
-    var clienteSeleccionado by remember { mutableStateOf("Todos los clientes") }
-    var dropdownExpandido by remember { mutableStateOf(false) }
-
-    // Obtenemos los clientes únicos directamente del array de viajes
-    val clientesDisponibles = remember(viajes) {
-        listOf("Todos los clientes") + viajes.map { it.cliente }.filter { it.isNotBlank() }.distinct().sorted()
-    }
+    // 1. ESTADOS LOCALES (Toggle de Agrupación)
+    var agruparPorDia by remember { mutableStateOf(true) }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // BUSCADOR Y DROPDOWN DE CLIENTES
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Buscar TD, Patente o Chofer...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Close, contentDescription = "Borrar")
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // DROPDOWN CLIENTES
-            ExposedDropdownMenuBox(
-                expanded = dropdownExpandido,
-                onExpandedChange = { dropdownExpandido = !dropdownExpandido }
-            ) {
-                IconButton(
-                    onClick = { dropdownExpandido = true },
-                    modifier = Modifier.menuAnchor()
-                ) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtrar Cliente")
-                }
-                ExposedDropdownMenu(
-                    expanded = dropdownExpandido,
-                    onDismissRequest = { dropdownExpandido = false }
-                ) {
-                    clientesDisponibles.forEach { cliente ->
-                        DropdownMenuItem(
-                            text = { Text(cliente) },
-                            onClick = {
-                                clienteSeleccionado = cliente
-                                dropdownExpandido = false
-                            }
-                        )
+        // BUSCADOR (Vuelve a ocupar el 100% de la fila)
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            placeholder = { Text("Buscar TD, Patente o Chofer...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchQueryChange("") }) {
+                        Icon(Icons.Default.Close, contentDescription = "Borrar")
                     }
                 }
-            }
-        }
+            },
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium
+        )
 
         // CHIPS Y TOGGLE PARA REVERTIR AGRUPACIÓN
         Row(
@@ -129,9 +90,6 @@ fun PantallaViajes(
                     viaje.numDespacho.contains(searchQuery, ignoreCase = true) ||
                     viaje.chofer.contains(searchQuery, ignoreCase = true)
 
-            // Búsqueda por Dropdown de cliente
-            val coincideCliente = clienteSeleccionado == "Todos los clientes" || viaje.cliente.equals(clienteSeleccionado, ignoreCase = true)
-
             // Búsqueda por Chip de Terminal o Guardados
             val coincideFiltro = when (filtroActual) {
                 FiltroTerminal.TODOS -> true
@@ -142,7 +100,7 @@ fun PantallaViajes(
             }
 
             // Exigimos que todas las condiciones se cumplan
-            coincideBusqueda && coincideCliente && coincideFiltro
+            coincideBusqueda && coincideFiltro
         }
 
         // RENDERIZADO
